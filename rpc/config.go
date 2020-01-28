@@ -3,6 +3,7 @@ package rpc
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -61,9 +62,9 @@ func registerRoutes(rs *lcd.RestServer) {
 		keyringBackend := viper.GetString(flags.FlagKeyringBackend)
 		passphrase := ""
 		switch keyringBackend {
-		case flags.KeyringBackendOS:
+		case keys.BackendOS:
 			break
-		case flags.KeyringBackendFile:
+		case keys.BackendFile:
 			passphrase, err = input.GetPassword("Enter password to unlock key for RPC API: ", buf)
 			if err != nil {
 				panic(err)
