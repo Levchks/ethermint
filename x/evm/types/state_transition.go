@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	emint "github.com/cosmos/ethermint/types"
 )
 
@@ -34,7 +35,7 @@ func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result)
 
 	cost, err := core.IntrinsicGas(st.Payload, contractCreation, true)
 	if err != nil {
-		return nil, sdk.ErrOutOfGas("invalid intrinsic gas for transaction").Result()
+		return nil, sdkerrors.ErrOutOfGas("invalid intrinsic gas for transaction").Result()
 	}
 
 	// This gas limit the the transaction gas limit with intrinsic gas subtracted
@@ -119,7 +120,7 @@ func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result)
 	if vmerr != nil {
 		res := emint.ErrVMExecution(vmerr.Error()).Result()
 		if vmerr == vm.ErrOutOfGas || vmerr == vm.ErrCodeStoreOutOfGas {
-			res = sdk.ErrOutOfGas("EVM execution went out of gas").Result()
+			res = sdkerrors.ErrOutOfGas("EVM execution went out of gas").Result()
 		}
 		res.Data = returnData
 		// Consume gas before returning
