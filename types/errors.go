@@ -41,22 +41,22 @@ func ErrInvalidValue(msg string) *sdk.Error {
 }
 
 // ErrInvalidChainID returns a standardized SDK error resulting from an invalid chain ID.
-func ErrInvalidChainID(msg string) *sdk.Error {
+func ErrInvalidChainID(msg string) error {
 	return sdk.Register(DefaultCodespace, CodeInvalidChainID, msg)
 }
 
 // ErrInvalidSender returns a standardized SDK error resulting from an invalid transaction sender.
-func ErrInvalidSender(msg string) *sdk.Error {
+func ErrInvalidSender(msg string) error {
 	return sdk.Register(DefaultCodespace, CodeInvalidSender, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrVMExecution(msg string) *sdk.Error {
+func ErrVMExecution(msg string) error {
 	return sdk.Register(DefaultCodespace, CodeVMExecution, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrInvalidNonce(msg string) *sdk.Error {
+func ErrInvalidNonce(msg string) error {
 	return sdk.Register(DefaultCodespace, CodeInvalidNonce, msg)
 }
 

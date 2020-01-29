@@ -185,35 +185,35 @@ func (e *PublicEthAPI) GetTransactionCount(address common.Address, blockNum Bloc
 	return (*hexutil.Uint64)(&out.Nonce), nil
 }
 
-// GetBlockTransactionCountByHash returns the number of transactions in the block identified by hash.
-func (e *PublicEthAPI) GetBlockTransactionCountByHash(hash common.Hash) *hexutil.Uint {
-	res, _, err := e.cliCtx.Query(fmt.Sprintf("custom/%s/%s/%s", types.ModuleName, evm.QueryHashToHeight, hash.Hex()))
-	if err != nil {
-		// Return nil if block does not exist
-		return nil
-	}
-
-	var out types.QueryResBlockNumber
-	e.cliCtx.Codec.MustUnmarshalJSON(res, &out)
-	return e.getBlockTransactionCountByNumber(out.Number)
-}
-
-// GetBlockTransactionCountByNumber returns the number of transactions in the block identified by number.
-func (e *PublicEthAPI) GetBlockTransactionCountByNumber(blockNum BlockNumber) *hexutil.Uint {
-	height := blockNum.Int64()
-	return e.getBlockTransactionCountByNumber(height)
-}
-
-func (e *PublicEthAPI) getBlockTransactionCountByNumber(number int64) *hexutil.Uint {
-	block, err := e.cliCtx.Client.Block(&number)
-	if err != nil {
-		// Return nil if block doesn't exist
-		return nil
-	}
-
-	n := hexutil.Uint(block.Block.NumTxs)
-	return &n
-}
+//// GetBlockTransactionCountByHash returns the number of transactions in the block identified by hash.
+//func (e *PublicEthAPI) GetBlockTransactionCountByHash(hash common.Hash) *hexutil.Uint {
+//	res, _, err := e.cliCtx.Query(fmt.Sprintf("custom/%s/%s/%s", types.ModuleName, evm.QueryHashToHeight, hash.Hex()))
+//	if err != nil {
+//		// Return nil if block does not exist
+//		return nil
+//	}
+//
+//	var out types.QueryResBlockNumber
+//	e.cliCtx.Codec.MustUnmarshalJSON(res, &out)
+//	return e.getBlockTransactionCountByNumber(out.Number)
+//}
+//
+//// GetBlockTransactionCountByNumber returns the number of transactions in the block identified by number.
+//func (e *PublicEthAPI) GetBlockTransactionCountByNumber(blockNum BlockNumber) *hexutil.Uint {
+//	height := blockNum.Int64()
+//	return e.getBlockTransactionCountByNumber(height)
+//}
+//
+//func (e *PublicEthAPI) getBlockTransactionCountByNumber(number int64) *hexutil.Uint {
+//	block, err := e.cliCtx.Client.Block(&number)
+//	if err != nil {
+//		// Return nil if block doesn't exist
+//		return nil
+//	}
+//
+//	n := hexutil.Uint(block.Block.NumTxs)
+//	return &n
+//}
 
 // GetUncleCountByBlockHash returns the number of uncles in the block idenfied by hash. Always zero.
 func (e *PublicEthAPI) GetUncleCountByBlockHash(hash common.Hash) hexutil.Uint {
