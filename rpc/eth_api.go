@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	emintcrypto "github.com/cosmos/ethermint/crypto"
 	params "github.com/cosmos/ethermint/rpc/args"
 	emint "github.com/cosmos/ethermint/types"
@@ -347,16 +346,16 @@ type CallArgs struct {
 }
 
 // Call performs a raw contract call.
-func (e *PublicEthAPI) Call(args CallArgs, blockNr rpc.BlockNumber, overrides *map[common.Address]account) (hexutil.Bytes, error) {
-	result, err := e.doCall(args, blockNr, big.NewInt(emint.DefaultRPCGasLimit))
-	if err != nil {
-		return []byte{}, err
-	}
-
-	_, _, ret, err := types.DecodeReturnData(result.Data)
-
-	return (hexutil.Bytes)(ret), err
-}
+//func (e *PublicEthAPI) Call(args CallArgs, blockNr rpc.BlockNumber, overrides *map[common.Address]account) (hexutil.Bytes, error) {
+//	result, err := e.doCall(args, blockNr, big.NewInt(emint.DefaultRPCGasLimit))
+//	if err != nil {
+//		return []byte{}, err
+//	}
+//
+//	_, _, ret, err := types.DecodeReturnData(result.Data)
+//
+//	return (hexutil.Bytes)(ret), err
+//}
 
 // account indicates the overriding fields of account during the execution of
 // a message call.
@@ -373,7 +372,7 @@ type account struct {
 }
 
 // DoCall performs a simulated call operation through the evm
-func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasCap *big.Int) (sdk.Result, error) {
+func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasCap *big.Int) (uint64, error) {
 	// Set height for historical queries
 	ctx := e.cliCtx
 	if blockNr.Int64() != 0 {
@@ -438,32 +437,32 @@ func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasC
 	txEncoder := authutils.GetTxEncoder(ctx.Codec)
 	txBytes, err := txEncoder(tx)
 	if err != nil {
-		return sdk.Result{}, err
+		return 0, err
 	}
 
 	// Transaction simulation through query
 	res, _, err := ctx.QueryWithData("app/simulate", txBytes)
 	if err != nil {
-		return sdk.Result{}, err
+		return 0, err
 	}
 
-	var simResult sdk.Result
-	if err = e.cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res, &simResult); err != nil {
-		return sdk.Result{}, err
+	var gasUsed uint64
+	if err = e.cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res, &gasUsed); err != nil {
+		return 0, err
 	}
 
-	return simResult, nil
+	return gasUsed, nil
 }
 
 // EstimateGas estimates gas usage for the given smart contract call.
 func (e *PublicEthAPI) EstimateGas(args CallArgs) (hexutil.Uint64, error) {
-	result, err := e.doCall(args, 0, big.NewInt(emint.DefaultRPCGasLimit))
+	gasUsed, err := e.doCall(args, 0, big.NewInt(emint.DefaultRPCGasLimit))
 	if err != nil {
 		return 0, err
 	}
 
 	// TODO: change 1000 buffer for more accurate buffer (must be at least 1 to not run OOG)
-	return hexutil.Uint64(result.GasUsed + 1000), nil
+	return hexutil.Uint64(gasUsed + 1000), nil
 }
 
 // GetBlockByHash returns the block identified by hash.
@@ -495,7 +494,7 @@ func (e *PublicEthAPI) getEthBlockByNumber(value int64, fullTx bool) (map[string
 	if err != nil {
 		return nil, err
 	}
-	header := block.BlockMeta.Header
+	header := block.Block.Header
 
 	gasLimit, err := e.getGasLimit()
 	if err != nil {
@@ -638,7 +637,7 @@ func (e *PublicEthAPI) GetTransactionByHash(hash common.Hash) (*Transaction, err
 	if err != nil {
 		return nil, err
 	}
-	blockHash := common.BytesToHash(block.BlockMeta.Header.Hash())
+	blockHash := common.BytesToHash(block.Block.Header.Hash())
 
 	ethTx, err := bytesToEthTx(e.cliCtx, tx.Tx)
 	if err != nil {
@@ -672,7 +671,7 @@ func (e *PublicEthAPI) getTransactionByBlockNumberAndIndex(number int64, idx hex
 	if err != nil {
 		return nil, err
 	}
-	header := block.BlockMeta.Header
+	header := block.Block.Header
 
 	txs := block.Block.Txs
 	if uint64(idx) >= uint64(len(txs)) {
@@ -701,7 +700,7 @@ func (e *PublicEthAPI) GetTransactionReceipt(hash common.Hash) (map[string]inter
 	if err != nil {
 		return nil, err
 	}
-	blockHash := common.BytesToHash(block.BlockMeta.Header.Hash())
+	blockHash := common.BytesToHash(block.Block.Header.Hash())
 
 	// Convert tx bytes to eth transaction
 	ethTx, err := bytesToEthTx(e.cliCtx, tx.Tx)
