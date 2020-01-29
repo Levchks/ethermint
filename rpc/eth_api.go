@@ -3,6 +3,7 @@ package rpc
 import (
 	"bytes"
 	"fmt"
+	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"log"
 	"math/big"
 	"strconv"
@@ -108,7 +109,7 @@ func (e *PublicEthAPI) Accounts() ([]common.Address, error) {
 	e.keybaseLock.Lock()
 
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
-	keybase, err := keys.NewKeyringFromHomeFlag(e.cliCtx.Input)
+	keybase, err := keys2.NewKeyring( version.AppName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, e.cliCtx.Input)
 	if err != nil {
 		return addresses, err
 	}

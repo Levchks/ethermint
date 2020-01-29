@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"strconv"
 	"strings"
 
@@ -33,7 +34,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	evmTxCmd.AddCommand(client.PostCommands(
+	evmTxCmd.AddCommand(flags.PostCommands(
 		GetCmdGenTx(cdc),
 		GetCmdGenCreateTx(cdc),
 	)...)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"github.com/cosmos/ethermint/version"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -56,7 +57,7 @@ func getKeybase(dryrun bool, buf io.Reader) (keys.Keybase, error) {
 		return keys.NewInMemory(keys.WithKeygenFunc(ethermintKeygenFunc)), nil
 	}
 
-	return clientkeys.NewKeyringFromHomeFlag(buf, keys.WithKeygenFunc(ethermintKeygenFunc))
+	return keys.NewKeyring(version.AppName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, buf, keys.WithKeygenFunc(ethermintKeygenFunc))
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {

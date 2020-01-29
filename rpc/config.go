@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/ethermint/version"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	emintkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -101,7 +101,7 @@ func registerRoutes(rs *lcd.RestServer) {
 }
 
 func unlockKeyFromNameAndPassphrase(accountName, passphrase string) (emintKey emintcrypto.PrivKeySecp256k1, err error) {
-	keybase, err := emintkeys.NewKeyringFromHomeFlag(os.Stdin)
+	keybase, err := keys.NewKeyring(version.AppName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, os.Stdin)
 	if err != nil {
 		return
 	}
