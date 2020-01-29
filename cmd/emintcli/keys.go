@@ -70,6 +70,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	return clientkeys.RunAddCmd(cmd, args, kb, inBuf)
 }
 
+//TODO check it
 func ethermintKeygenFunc(bz []byte, algo keys.SigningAlgo) (tmcrypto.PrivKey, error) {
 	return emintCrypto.PrivKeySecp256k1(bz[:]), nil
 }
