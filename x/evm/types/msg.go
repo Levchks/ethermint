@@ -330,7 +330,7 @@ func TxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 		err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 		if err != nil {
 			fmt.Println(err.Error())
-			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, ("failed to decode tx").TraceSDK(err.Error())
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, fmt.Sprintf("failed to decode tx: %s", err.Error()))
 		}
 
 		return tx, nil
