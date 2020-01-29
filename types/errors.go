@@ -14,6 +14,7 @@ const (
 	CodeInvalidSender  uint32 = 3
 	CodeVMExecution    uint32 = 4
 	CodeInvalidNonce   uint32 = 5
+	CodeInternalError  uint32 = 6
 )
 
 // CodeToDefaultMsg takes the CodeType variable and returns the error string
@@ -57,4 +58,8 @@ func ErrVMExecution(msg string) *sdk.Error {
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
 func ErrInvalidNonce(msg string) *sdk.Error {
 	return sdk.Register(DefaultCodespace, CodeInvalidNonce, msg)
+}
+
+func ErrInternalError(msg string) error {
+	return sdk.Register(DefaultCodespace, CodeInternalError, msg)
 }

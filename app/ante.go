@@ -57,7 +57,7 @@ func NewAnteHandler(ak auth.AccountKeeper, sk types.SupplyKeeper) sdk.AnteHandle
 			return ethAnteHandler(ctx, ak, sk, castTx, sim)
 
 		default:
-			return ctx, sdkerrors.ErrInternal(fmt.Sprintf("transaction type invalid: %T", tx))
+			return ctx, emint.ErrInternalError(fmt.Sprintf("transaction type invalid: %T", tx))
 		}
 	}
 }
@@ -217,11 +217,11 @@ func validateSignature(ctx sdk.Context, ethTxMsg *evmtypes.EthereumTxMsg) (sdk.A
 func validateIntrinsicGas(ethTxMsg *evmtypes.EthereumTxMsg) error {
 	gas, err := ethcore.IntrinsicGas(ethTxMsg.Data.Payload, ethTxMsg.To() == nil, true)
 	if err != nil {
-		return sdkerrors.ErrInternal(fmt.Sprintf("failed to compute intrinsic gas cost: %s", err))
+		return emint.ErrInternalError(fmt.Sprintf("failed to compute intrinsic gas cost: %s", err))
 	}
 
 	if ethTxMsg.Data.GasLimit < gas {
-		return sdkerrors.ErrInternal(
+		return emint.ErrInternalError(
 			fmt.Sprintf("intrinsic gas too low; %d < %d", ethTxMsg.Data.GasLimit, gas),
 		)
 	}
@@ -239,7 +239,7 @@ func validateAccount(
 
 	// on InitChain make sure account number == 0
 	if ctx.BlockHeight() == 0 && acc.GetAccountNumber() != 0 {
-		return sdkerrors.ErrInternal(
+		return emint.ErrInternalError(
 			fmt.Sprintf(
 				"invalid account number for height zero; got %d, expected 0", acc.GetAccountNumber(),
 			))
