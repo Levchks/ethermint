@@ -54,7 +54,7 @@ func newTestSetup() testSetup {
 	cdc.RegisterConcrete(&sdk.TestMsg{}, "test/TestMsg", nil)
 
 	// Set params keeper and subspaces
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	authSubspace := paramsKeeper.Subspace(auth.DefaultParamspace)
 
 	ctx := sdk.NewContext(
