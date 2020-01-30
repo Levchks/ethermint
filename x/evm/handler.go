@@ -39,20 +39,20 @@ func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) (*s
 	// parse the chainID from a string to a base-10 integer
 	intChainID, ok := new(big.Int).SetString(ctx.ChainID(), 10)
 	if !ok {
-		return &sdk.Result{}, emint.ErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
+		return &sdk.Result{}, emint.WrapErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
 	}
 
 	// Verify signature and retrieve sender address
 	sender, err := msg.VerifySig(intChainID)
 	if err != nil {
-		return &sdk.Result{}, emint.ErrInvalidSender(err.Error())
+		return &sdk.Result{}, emint.WrapErrInvalidSender(err.Error())
 	}
 
 	// Encode transaction by default Tx encoder
 	txEncoder := authutils.GetTxEncoder(types.ModuleCdc)
 	txBytes, err := txEncoder(msg)
 	if err != nil {
-		return &sdk.Result{}, emint.ErrInternalError(err.Error())
+		return &sdk.Result{}, emint.WrapErrInternalError(err.Error())
 	}
 	txHash := tm.Tx(txBytes).Hash()
 	ethHash := common.BytesToHash(txHash)
@@ -90,7 +90,7 @@ func handleEmintMsg(ctx sdk.Context, keeper Keeper, msg types.EmintMsg) (*sdk.Re
 	// parse the chainID from a string to a base-10 integer
 	intChainID, ok := new(big.Int).SetString(ctx.ChainID(), 10)
 	if !ok {
-		return &sdk.Result{}, emint.ErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
+		return &sdk.Result{}, emint.WrapErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
 	}
 
 	st := types.StateTransition{

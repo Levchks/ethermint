@@ -35,31 +35,40 @@ const (
 //	}
 //}
 
+var (
+	ErrInvalidValue = sdk.Register(DefaultCodespace, CodeInvalidValue, "invalid value")
+	ErrInvalidChainID = sdk.Register(DefaultCodespace, CodeInvalidChainID, "invalid chainid")
+	ErrInvalidSender = sdk.Register(DefaultCodespace, CodeInvalidSender, "invalid sender")
+	ErrVMExecution = sdk.Register(DefaultCodespace, CodeVMExecution, "vme execution failed")
+	ErrInvalidNonce = sdk.Register(DefaultCodespace, CodeInvalidNonce, "invalid nonce")
+	ErrInternalError = sdk.Register(DefaultCodespace, CodeInternalError, "internal errot")
+)
+
 // ErrInvalidValue returns a standardized SDK error resulting from an invalid value.
-func ErrInvalidValue(msg string) *sdk.Error {
-	return sdk.Register(DefaultCodespace, CodeInvalidValue, msg)
+func WrapErrInvalidValue(msg string) error {
+	return sdk.Wrap(ErrInvalidValue, msg)
 }
 
 // ErrInvalidChainID returns a standardized SDK error resulting from an invalid chain ID.
-func ErrInvalidChainID(msg string) error {
-	return sdk.Register(DefaultCodespace, CodeInvalidChainID, msg)
+func WrapErrInvalidChainID(msg string) error {
+	return sdk.Wrap(ErrInvalidChainID, msg)
 }
 
 // ErrInvalidSender returns a standardized SDK error resulting from an invalid transaction sender.
-func ErrInvalidSender(msg string) error {
-	return sdk.Register(DefaultCodespace, CodeInvalidSender, msg)
+func WrapErrInvalidSender(msg string) error {
+	return sdk.Wrap(ErrInvalidSender, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrVMExecution(msg string) error {
-	return sdk.Register(DefaultCodespace, CodeVMExecution, msg)
+func WrapErrVMExecution(msg string) error {
+	return sdk.Wrap(ErrVMExecution, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrInvalidNonce(msg string) error {
-	return sdk.Register(DefaultCodespace, CodeInvalidNonce, msg)
+func WrapErrInvalidNonce(msg string) error {
+	return sdk.Wrap(ErrInvalidNonce, msg)
 }
 
-func ErrInternalError(msg string) error {
-	return sdk.Register(DefaultCodespace, CodeInternalError, msg)
+func WrapErrInternalError(msg string) error {
+	return sdk.Wrap(ErrInternalError, msg)
 }

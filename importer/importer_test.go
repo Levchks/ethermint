@@ -152,6 +152,12 @@ func createAndTestGenesis(t *testing.T, cms sdk.CommitMultiStore, ak auth.Accoun
 }
 
 func TestImportBlocks(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatal("test failed: ", r)
+		}
+	}()
+
 	if flagDataDir == "" {
 		flagDataDir = os.TempDir()
 	}
@@ -175,7 +181,7 @@ func TestImportBlocks(t *testing.T) {
 	// The ParamsKeeper handles parameter storage for the application
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams, params.DefaultCodespace)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	// Set specific supspaces
 	authSubspace := paramsKeeper.Subspace(auth.DefaultParamspace)
 	ak := auth.NewAccountKeeper(cdc, accKey, authSubspace, types.ProtoBaseAccount)

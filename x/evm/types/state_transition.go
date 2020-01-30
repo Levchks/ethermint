@@ -118,7 +118,7 @@ func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result,
 	// handle errors
 	if vmerr != nil {
 		var res sdk.Result
-		err := emint.ErrVMExecution(vmerr.Error())
+		err := emint.WrapErrVMExecution(vmerr.Error())
 		if vmerr == vm.ErrOutOfGas || vmerr == vm.ErrCodeStoreOutOfGas {
 			err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas,"EVM execution went out of gas")
 		}

@@ -60,12 +60,12 @@ func (msg EmintMsg) GetSignBytes() []byte {
 // ValidateBasic runs stateless checks on the message
 func (msg EmintMsg) ValidateBasic() error {
 	if msg.Price.Sign() != 1 {
-		return types.ErrInvalidValue(fmt.Sprintf("Price must be positive: %x", msg.Price))
+		return types.WrapErrInvalidValue(fmt.Sprintf("Price must be positive: %x", msg.Price))
 	}
 
 	// Amount can be 0
 	if msg.Amount.Sign() == -1 {
-		return types.ErrInvalidValue(fmt.Sprintf("amount cannot be negative: %x", msg.Amount))
+		return types.WrapErrInvalidValue(fmt.Sprintf("amount cannot be negative: %x", msg.Amount))
 	}
 
 	return nil

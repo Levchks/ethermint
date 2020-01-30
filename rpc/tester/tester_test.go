@@ -173,7 +173,9 @@ func TestEth_GetCode(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	if rpcRes == nil {
+		t.Fatal("nil response")
+	}
 	var code hexutil.Bytes
 	err = code.UnmarshalJSON(rpcRes.Result)
 
