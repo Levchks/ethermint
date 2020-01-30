@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/ethermint/version"
+	"github.com/cosmos/cosmos-sdk/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -30,7 +30,7 @@ func exportEthKeyCommand() *cobra.Command {
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := keys.NewKeyring( version.AppName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, cmd.InOrStdin())
+	kb, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

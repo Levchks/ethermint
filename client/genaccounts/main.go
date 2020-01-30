@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/ethermint/version"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -52,7 +50,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			if err != nil {
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keys.NewKeyring(version.AppName,viper.GetString(flags.FlagKeyringBackend),viper.GetString(flagClientHome), inBuf)
+				kb, err := keys.NewKeyring(sdk.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend),viper.GetString(flagClientHome), inBuf)
 				if err != nil {
 					return err
 				}
