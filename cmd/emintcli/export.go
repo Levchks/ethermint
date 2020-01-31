@@ -30,7 +30,7 @@ func exportEthKeyCommand() *cobra.Command {
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, cmd.InOrStdin())
+	kb, err := keys.NewKeyring(types.KeyringServiceName(),viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}

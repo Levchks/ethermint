@@ -50,7 +50,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			if err != nil {
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keys.NewKeyring(sdk.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend),viper.GetString(flagClientHome), inBuf)
+				kb, err := keys.NewKeyring(sdk.KeyringServiceName(),viper.GetString(flags.FlagKeyringBackend),viper.GetString(flagClientHome), inBuf)
 				if err != nil {
 					return err
 				}

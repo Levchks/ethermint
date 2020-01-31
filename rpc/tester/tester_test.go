@@ -23,7 +23,7 @@ import (
 const (
 	host          = "localhost"
 	port          = 8545
-	addrA         = "0xc94770007dda54cF92009BFF0dE90c06F603a09f"
+	addrA         = "0xFF3B68F9F65fBa7c75CcdB13C7F6fB02B78E81C6"
 	addrAStoreKey = 0
 )
 
@@ -138,7 +138,7 @@ func TestEth_GetBalance(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Logf("Got balance %s for %s\n", res.String(), addrA)
+	t.Logf("Got balance %d for %s\n", res.ToInt(), addrA)
 
 	// 0 if x == y; where x is res, y is 0
 	if res.ToInt().Cmp(big.NewInt(0)) != 0 {
