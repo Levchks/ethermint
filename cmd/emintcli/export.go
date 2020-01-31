@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	emintcrypto "github.com/cosmos/ethermint/crypto"
 )
 
@@ -29,7 +30,7 @@ func exportEthKeyCommand() *cobra.Command {
 }
 
 func runExportCmd(cmd *cobra.Command, args []string) error {
-	kb, err := clientkeys.NewKeyringFromHomeFlag(cmd.InOrStdin())
+	kb, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, cmd.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -39,11 +40,11 @@ func runExportCmd(cmd *cobra.Command, args []string) error {
 	conf := true
 	keyringBackend := viper.GetString(flags.FlagKeyringBackend)
 	switch keyringBackend {
-	case flags.KeyringBackendFile:
+	case keys.BackendFile:
 		decryptPassword, err = input.GetPassword(
 			"**WARNING this is an unsafe way to export your unencrypted private key**\nEnter key password:",
 			buf)
-	case flags.KeyringBackendOS:
+	case keys.BackendOS:
 		conf, err = input.GetConfirmation(
 			"**WARNING** this is an unsafe way to export your unencrypted private key, are you sure?",
 			buf)

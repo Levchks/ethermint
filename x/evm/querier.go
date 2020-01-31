@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/ethermint/utils"
 	"github.com/cosmos/ethermint/version"
 	"github.com/cosmos/ethermint/x/evm/types"
@@ -30,7 +31,7 @@ const (
 
 // NewQuerier is the module level router for state queries
 func NewQuerier(keeper Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err error) {
 		switch path[0] {
 		case QueryProtocolVersion:
 			return queryProtocolVersion(keeper)
@@ -55,12 +56,12 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		case QueryAccount:
 			return queryAccount(ctx, path, keeper)
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown query endpoint")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"unknown query endpoint")
 		}
 	}
 }
 
-func queryProtocolVersion(keeper Keeper) ([]byte, sdk.Error) {
+func queryProtocolVersion(keeper Keeper) ([]byte, error) {
 	vers := version.ProtocolVersion
 
 	res, err := codec.MarshalJSONIndent(keeper.cdc, hexutil.Uint(vers))
@@ -71,7 +72,7 @@ func queryProtocolVersion(keeper Keeper) ([]byte, sdk.Error) {
 	return res, nil
 }
 
-func queryBalance(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryBalance(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	addr := ethcmn.HexToAddress(path[1])
 	balance := keeper.GetBalance(ctx, addr)
 
@@ -84,7 +85,7 @@ func queryBalance(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Er
 	return res, nil
 }
 
-func queryBlockNumber(ctx sdk.Context, keeper Keeper) ([]byte, sdk.Error) {
+func queryBlockNumber(ctx sdk.Context, keeper Keeper) ([]byte, error) {
 	num := ctx.BlockHeight()
 	bnRes := types.QueryResBlockNumber{Number: num}
 	res, err := codec.MarshalJSONIndent(keeper.cdc, bnRes)
@@ -95,7 +96,7 @@ func queryBlockNumber(ctx sdk.Context, keeper Keeper) ([]byte, sdk.Error) {
 	return res, nil
 }
 
-func queryStorage(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryStorage(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	addr := ethcmn.HexToAddress(path[1])
 	key := ethcmn.HexToHash(path[2])
 	val := keeper.GetState(ctx, addr, key)
@@ -107,7 +108,7 @@ func queryStorage(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Er
 	return res, nil
 }
 
-func queryCode(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryCode(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	addr := ethcmn.HexToAddress(path[1])
 	code := keeper.GetCode(ctx, addr)
 	cRes := types.QueryResCode{Code: code}
@@ -119,7 +120,7 @@ func queryCode(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error
 	return res, nil
 }
 
-func queryNonce(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryNonce(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	addr := ethcmn.HexToAddress(path[1])
 	nonce := keeper.GetNonce(ctx, addr)
 	nRes := types.QueryResNonce{Nonce: nonce}
@@ -131,7 +132,7 @@ func queryNonce(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Erro
 	return res, nil
 }
 
-func queryHashToHeight(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryHashToHeight(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	blockHash := ethcmn.FromHex(path[1])
 	blockNumber := keeper.GetBlockHashMapping(ctx, blockHash)
 
@@ -144,7 +145,7 @@ func queryHashToHeight(ctx sdk.Context, path []string, keeper Keeper) ([]byte, s
 	return res, nil
 }
 
-func queryBlockLogsBloom(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryBlockLogsBloom(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	num, err := strconv.ParseInt(path[1], 10, 64)
 	if err != nil {
 		panic("could not unmarshall block number: " + err.Error())
@@ -161,7 +162,7 @@ func queryBlockLogsBloom(ctx sdk.Context, path []string, keeper Keeper) ([]byte,
 	return res, nil
 }
 
-func queryTxLogs(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryTxLogs(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	txHash := ethcmn.HexToHash(path[1])
 	logs := keeper.GetLogs(ctx, txHash)
 
@@ -174,7 +175,7 @@ func queryTxLogs(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Err
 	return res, nil
 }
 
-func queryLogs(ctx sdk.Context, keeper Keeper) ([]byte, sdk.Error) {
+func queryLogs(ctx sdk.Context, keeper Keeper) ([]byte, error) {
 	logs := keeper.Logs(ctx)
 
 	lRes := types.QueryETHLogs{Logs: logs}
@@ -185,7 +186,7 @@ func queryLogs(ctx sdk.Context, keeper Keeper) ([]byte, sdk.Error) {
 	return l, nil
 }
 
-func queryAccount(ctx sdk.Context, path []string, keeper Keeper) ([]byte, sdk.Error) {
+func queryAccount(ctx sdk.Context, path []string, keeper Keeper) ([]byte, error) {
 	addr := ethcmn.HexToAddress(path[1])
 	so := keeper.GetOrNewStateObject(ctx, addr)
 

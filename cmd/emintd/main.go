@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"io"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	clientkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -115,7 +115,7 @@ func withChainIDValidation(baseCmd *cobra.Command) *cobra.Command {
 
 	// Function to replace command's RunE function
 	chainIDVerify := func(cmd *cobra.Command, args []string) error {
-		chainIDFlag := viper.GetString(client.FlagChainID)
+		chainIDFlag := viper.GetString(flags.FlagChainID)
 
 		// Verify that the chain-id entered is a base 10 integer
 		_, ok := new(big.Int).SetString(chainIDFlag, 10)

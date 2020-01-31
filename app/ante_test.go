@@ -14,6 +14,17 @@ import (
 	evmtypes "github.com/cosmos/ethermint/x/evm/types"
 )
 
+const (
+	CodeOutOfGas  uint32 = 11
+	CodeNoSignatures uint32 = 15
+	CodeUnauthorized uint32 = 4
+	CodeUnknownAddress uint32 = 9
+	CodeInvalidSequence uint32 = 3
+	CodeInsufficientFunds uint32 = 5
+	CodeInternal uint32 = 6
+	CodeInsufficientFee uint32 = 13
+)
+
 func requireValidTx(
 	t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, sim bool,
 ) {
@@ -23,14 +34,14 @@ func requireValidTx(
 
 func requireInvalidTx(
 	t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context,
-	tx sdk.Tx, sim bool, code sdk.CodeType,
+	tx sdk.Tx, sim bool, code uint32,
 ) {
 
 	_, err := anteHandler(ctx, tx, sim)
 	// require.Equal(t, code, err, fmt.Sprintf("invalid result: %v", err))
 	require.Error(t, err)
 
-	if code == sdk.CodeOutOfGas {
+	if code == CodeOutOfGas {
 		_, ok := tx.(auth.StdTx)
 		require.True(t, ok, "tx must be in form auth.StdTx")
 	}
@@ -123,7 +134,7 @@ func TestSDKInvalidSigs(t *testing.T) {
 	accSeqs := []uint64{acc1.GetSequence(), acc2.GetSequence()}
 
 	tx := newTestSDKTx(input.ctx, msgs, privKeys, accNums, accSeqs, fee)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeNoSignatures)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeNoSignatures)
 
 	// require validation failure with invalid number of signers
 	msgs = []sdk.Msg{msg1}
@@ -133,7 +144,7 @@ func TestSDKInvalidSigs(t *testing.T) {
 	accSeqs = []uint64{acc1.GetSequence(), acc2.GetSequence()}
 
 	tx = newTestSDKTx(input.ctx, msgs, privKeys, accNums, accSeqs, fee)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeUnauthorized)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeUnauthorized)
 
 	// require validation failure with an invalid signer
 	msg2 := newTestMsg(addr1, addr3)
@@ -144,7 +155,7 @@ func TestSDKInvalidSigs(t *testing.T) {
 	accSeqs = []uint64{acc1.GetSequence(), acc2.GetSequence(), 0}
 
 	tx = newTestSDKTx(input.ctx, msgs, privKeys, accNums, accSeqs, fee)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeUnknownAddress)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeUnknownAddress)
 }
 
 func TestSDKInvalidAcc(t *testing.T) {
@@ -168,14 +179,14 @@ func TestSDKInvalidAcc(t *testing.T) {
 	accSeqs := []uint64{acc1.GetSequence()}
 
 	tx := newTestSDKTx(input.ctx, msgs, privKeys, accNums, accSeqs, fee)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeUnauthorized)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeUnauthorized)
 
 	// require validation failure with invalid sequence (nonce)
 	accNums = []uint64{acc1.GetAccountNumber()}
 	accSeqs = []uint64{1}
 
 	tx = newTestSDKTx(input.ctx, msgs, privKeys, accNums, accSeqs, fee)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeUnauthorized)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeUnauthorized)
 }
 
 func TestEthInvalidSig(t *testing.T) {
@@ -191,7 +202,7 @@ func TestEthInvalidSig(t *testing.T) {
 
 	tx := newTestEthTx(input.ctx, ethMsg, priv1)
 	ctx := input.ctx.WithChainID("4")
-	requireInvalidTx(t, input.anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
+	requireInvalidTx(t, input.anteHandler, ctx, tx, false, CodeUnauthorized)
 }
 
 func TestEthInvalidNonce(t *testing.T) {
@@ -215,7 +226,7 @@ func TestEthInvalidNonce(t *testing.T) {
 	ethMsg := evmtypes.NewEthereumTxMsg(0, &to, amt, 22000, gas, []byte("test"))
 
 	tx := newTestEthTx(input.ctx, ethMsg, priv1)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeInvalidSequence)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeInvalidSequence)
 }
 
 func TestEthInsufficientBalance(t *testing.T) {
@@ -235,7 +246,7 @@ func TestEthInsufficientBalance(t *testing.T) {
 	ethMsg := evmtypes.NewEthereumTxMsg(0, &to, amt, 22000, gas, []byte("test"))
 
 	tx := newTestEthTx(input.ctx, ethMsg, priv1)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeInsufficientFunds)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeInsufficientFunds)
 }
 
 func TestEthInvalidIntrinsicGas(t *testing.T) {
@@ -258,7 +269,7 @@ func TestEthInvalidIntrinsicGas(t *testing.T) {
 	ethMsg := evmtypes.NewEthereumTxMsg(0, &to, amt, gasLimit, gas, []byte("test"))
 
 	tx := newTestEthTx(input.ctx, ethMsg, priv1)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeInternal)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeInternal)
 }
 
 func TestEthInvalidMempoolFees(t *testing.T) {
@@ -281,7 +292,7 @@ func TestEthInvalidMempoolFees(t *testing.T) {
 	ethMsg := evmtypes.NewEthereumTxMsg(0, &to, amt, 22000, gas, []byte("test"))
 
 	tx := newTestEthTx(input.ctx, ethMsg, priv1)
-	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, sdk.CodeInsufficientFee)
+	requireInvalidTx(t, input.anteHandler, input.ctx, tx, false, CodeInsufficientFee)
 }
 
 func TestEthInvalidChainID(t *testing.T) {

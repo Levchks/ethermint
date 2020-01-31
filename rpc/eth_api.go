@@ -3,12 +3,12 @@ package rpc
 import (
 	"bytes"
 	"fmt"
+	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"log"
 	"math/big"
 	"strconv"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	emintcrypto "github.com/cosmos/ethermint/crypto"
 	params "github.com/cosmos/ethermint/rpc/args"
 	emint "github.com/cosmos/ethermint/types"
@@ -108,7 +108,7 @@ func (e *PublicEthAPI) Accounts() ([]common.Address, error) {
 	e.keybaseLock.Lock()
 
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
-	keybase, err := keys.NewKeyringFromHomeFlag(e.cliCtx.Input)
+	keybase, err := keys2.NewKeyring(sdk.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, e.cliCtx.Input)
 	if err != nil {
 		return addresses, err
 	}
@@ -185,35 +185,35 @@ func (e *PublicEthAPI) GetTransactionCount(address common.Address, blockNum Bloc
 	return (*hexutil.Uint64)(&out.Nonce), nil
 }
 
-// GetBlockTransactionCountByHash returns the number of transactions in the block identified by hash.
-func (e *PublicEthAPI) GetBlockTransactionCountByHash(hash common.Hash) *hexutil.Uint {
-	res, _, err := e.cliCtx.Query(fmt.Sprintf("custom/%s/%s/%s", types.ModuleName, evm.QueryHashToHeight, hash.Hex()))
-	if err != nil {
-		// Return nil if block does not exist
-		return nil
-	}
-
-	var out types.QueryResBlockNumber
-	e.cliCtx.Codec.MustUnmarshalJSON(res, &out)
-	return e.getBlockTransactionCountByNumber(out.Number)
-}
-
-// GetBlockTransactionCountByNumber returns the number of transactions in the block identified by number.
-func (e *PublicEthAPI) GetBlockTransactionCountByNumber(blockNum BlockNumber) *hexutil.Uint {
-	height := blockNum.Int64()
-	return e.getBlockTransactionCountByNumber(height)
-}
-
-func (e *PublicEthAPI) getBlockTransactionCountByNumber(number int64) *hexutil.Uint {
-	block, err := e.cliCtx.Client.Block(&number)
-	if err != nil {
-		// Return nil if block doesn't exist
-		return nil
-	}
-
-	n := hexutil.Uint(block.Block.NumTxs)
-	return &n
-}
+//// GetBlockTransactionCountByHash returns the number of transactions in the block identified by hash.
+//func (e *PublicEthAPI) GetBlockTransactionCountByHash(hash common.Hash) *hexutil.Uint {
+//	res, _, err := e.cliCtx.Query(fmt.Sprintf("custom/%s/%s/%s", types.ModuleName, evm.QueryHashToHeight, hash.Hex()))
+//	if err != nil {
+//		// Return nil if block does not exist
+//		return nil
+//	}
+//
+//	var out types.QueryResBlockNumber
+//	e.cliCtx.Codec.MustUnmarshalJSON(res, &out)
+//	return e.getBlockTransactionCountByNumber(out.Number)
+//}
+//
+//// GetBlockTransactionCountByNumber returns the number of transactions in the block identified by number.
+//func (e *PublicEthAPI) GetBlockTransactionCountByNumber(blockNum BlockNumber) *hexutil.Uint {
+//	height := blockNum.Int64()
+//	return e.getBlockTransactionCountByNumber(height)
+//}
+//
+//func (e *PublicEthAPI) getBlockTransactionCountByNumber(number int64) *hexutil.Uint {
+//	block, err := e.cliCtx.Client.Block(&number)
+//	if err != nil {
+//		// Return nil if block doesn't exist
+//		return nil
+//	}
+//
+//	n := hexutil.Uint(block.Block.NumTxs)
+//	return &n
+//}
 
 // GetUncleCountByBlockHash returns the number of uncles in the block idenfied by hash. Always zero.
 func (e *PublicEthAPI) GetUncleCountByBlockHash(hash common.Hash) hexutil.Uint {
@@ -346,16 +346,16 @@ type CallArgs struct {
 }
 
 // Call performs a raw contract call.
-func (e *PublicEthAPI) Call(args CallArgs, blockNr rpc.BlockNumber, overrides *map[common.Address]account) (hexutil.Bytes, error) {
-	result, err := e.doCall(args, blockNr, big.NewInt(emint.DefaultRPCGasLimit))
-	if err != nil {
-		return []byte{}, err
-	}
-
-	_, _, ret, err := types.DecodeReturnData(result.Data)
-
-	return (hexutil.Bytes)(ret), err
-}
+//func (e *PublicEthAPI) Call(args CallArgs, blockNr rpc.BlockNumber, overrides *map[common.Address]account) (hexutil.Bytes, error) {
+//	result, err := e.doCall(args, blockNr, big.NewInt(emint.DefaultRPCGasLimit))
+//	if err != nil {
+//		return []byte{}, err
+//	}
+//
+//	_, _, ret, err := types.DecodeReturnData(result.Data)
+//
+//	return (hexutil.Bytes)(ret), err
+//}
 
 // account indicates the overriding fields of account during the execution of
 // a message call.
@@ -372,7 +372,7 @@ type account struct {
 }
 
 // DoCall performs a simulated call operation through the evm
-func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasCap *big.Int) (sdk.Result, error) {
+func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasCap *big.Int) (uint64, error) {
 	// Set height for historical queries
 	ctx := e.cliCtx
 	if blockNr.Int64() != 0 {
@@ -437,32 +437,32 @@ func (e *PublicEthAPI) doCall(args CallArgs, blockNr rpc.BlockNumber, globalGasC
 	txEncoder := authutils.GetTxEncoder(ctx.Codec)
 	txBytes, err := txEncoder(tx)
 	if err != nil {
-		return sdk.Result{}, err
+		return 0, err
 	}
 
 	// Transaction simulation through query
 	res, _, err := ctx.QueryWithData("app/simulate", txBytes)
 	if err != nil {
-		return sdk.Result{}, err
+		return 0, err
 	}
 
-	var simResult sdk.Result
-	if err = e.cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res, &simResult); err != nil {
-		return sdk.Result{}, err
+	var gasUsed uint64
+	if err = e.cliCtx.Codec.UnmarshalBinaryLengthPrefixed(res, &gasUsed); err != nil {
+		return 0, err
 	}
 
-	return simResult, nil
+	return gasUsed, nil
 }
 
 // EstimateGas estimates gas usage for the given smart contract call.
 func (e *PublicEthAPI) EstimateGas(args CallArgs) (hexutil.Uint64, error) {
-	result, err := e.doCall(args, 0, big.NewInt(emint.DefaultRPCGasLimit))
+	gasUsed, err := e.doCall(args, 0, big.NewInt(emint.DefaultRPCGasLimit))
 	if err != nil {
 		return 0, err
 	}
 
 	// TODO: change 1000 buffer for more accurate buffer (must be at least 1 to not run OOG)
-	return hexutil.Uint64(result.GasUsed + 1000), nil
+	return hexutil.Uint64(gasUsed + 1000), nil
 }
 
 // GetBlockByHash returns the block identified by hash.
@@ -494,7 +494,7 @@ func (e *PublicEthAPI) getEthBlockByNumber(value int64, fullTx bool) (map[string
 	if err != nil {
 		return nil, err
 	}
-	header := block.BlockMeta.Header
+	header := block.Block.Header
 
 	gasLimit, err := e.getGasLimit()
 	if err != nil {
@@ -637,7 +637,7 @@ func (e *PublicEthAPI) GetTransactionByHash(hash common.Hash) (*Transaction, err
 	if err != nil {
 		return nil, err
 	}
-	blockHash := common.BytesToHash(block.BlockMeta.Header.Hash())
+	blockHash := common.BytesToHash(block.Block.Header.Hash())
 
 	ethTx, err := bytesToEthTx(e.cliCtx, tx.Tx)
 	if err != nil {
@@ -671,7 +671,7 @@ func (e *PublicEthAPI) getTransactionByBlockNumberAndIndex(number int64, idx hex
 	if err != nil {
 		return nil, err
 	}
-	header := block.BlockMeta.Header
+	header := block.Block.Header
 
 	txs := block.Block.Txs
 	if uint64(idx) >= uint64(len(txs)) {
@@ -700,7 +700,7 @@ func (e *PublicEthAPI) GetTransactionReceipt(hash common.Hash) (map[string]inter
 	if err != nil {
 		return nil, err
 	}
-	blockHash := common.BytesToHash(block.BlockMeta.Header.Hash())
+	blockHash := common.BytesToHash(block.Block.Header.Hash())
 
 	// Convert tx bytes to eth transaction
 	ethTx, err := bytesToEthTx(e.cliCtx, tx.Tx)

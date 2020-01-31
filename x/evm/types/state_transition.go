@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	emint "github.com/cosmos/ethermint/types"
 )
 
@@ -28,13 +29,12 @@ type StateTransition struct {
 }
 
 // TransitionCSDB performs an evm state transition from a transaction
-func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result) {
-
+func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result, error) {
 	contractCreation := st.Recipient == nil
 
 	cost, err := core.IntrinsicGas(st.Payload, contractCreation, true)
 	if err != nil {
-		return nil, sdk.ErrOutOfGas("invalid intrinsic gas for transaction").Result()
+		return nil, sdk.Result{}, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "invalid intrinsic gas for transaction")
 	}
 
 	// This gas limit the the transaction gas limit with intrinsic gas subtracted
@@ -117,14 +117,15 @@ func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result)
 
 	// handle errors
 	if vmerr != nil {
-		res := emint.ErrVMExecution(vmerr.Error()).Result()
+		var res sdk.Result
+		err := emint.WrapErrVMExecution(vmerr.Error())
 		if vmerr == vm.ErrOutOfGas || vmerr == vm.ErrCodeStoreOutOfGas {
-			res = sdk.ErrOutOfGas("EVM execution went out of gas").Result()
+			err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas,"EVM execution went out of gas")
 		}
 		res.Data = returnData
 		// Consume gas before returning
 		ctx.GasMeter().ConsumeGas(gasLimit-leftOverGas, "EVM execution consumption")
-		return nil, res
+		return nil, res, err
 	}
 
 	// TODO: Refund unused gas here, if intended in future
@@ -138,5 +139,5 @@ func (st StateTransition) TransitionCSDB(ctx sdk.Context) (*big.Int, sdk.Result)
 	// Out of gas check does not need to be done here since it is done within the EVM execution
 	ctx.WithGasMeter(currentGasMeter).GasMeter().ConsumeGas(gasLimit-leftOverGas, "EVM execution consumption")
 
-	return bloomInt, sdk.Result{Data: returnData, GasUsed: st.GasLimit - leftOverGas}
+	return bloomInt, sdk.Result{Data: returnData}, nil
 }

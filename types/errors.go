@@ -1,60 +1,74 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Ethermint error codes
 const (
 	// DefaultCodespace reserves a Codespace for Ethermint.
-	DefaultCodespace sdk.CodespaceType = "ethermint"
+	DefaultCodespace  = "ethermint"
 
-	CodeInvalidValue   sdk.CodeType = 1
-	CodeInvalidChainID sdk.CodeType = 2
-	CodeInvalidSender  sdk.CodeType = 3
-	CodeVMExecution    sdk.CodeType = 4
-	CodeInvalidNonce   sdk.CodeType = 5
+	CodeInvalidValue   uint32 = 1
+	CodeInvalidChainID uint32 = 2
+	CodeInvalidSender  uint32 = 3
+	CodeVMExecution    uint32 = 4
+	CodeInvalidNonce   uint32 = 5
+	CodeInternalError  uint32 = 6
 )
 
 // CodeToDefaultMsg takes the CodeType variable and returns the error string
-func CodeToDefaultMsg(code sdk.CodeType) string {
-	switch code {
-	case CodeInvalidValue:
-		return "invalid value"
-	case CodeInvalidChainID:
-		return "invalid chain ID"
-	case CodeInvalidSender:
-		return "could not derive sender from transaction"
-	case CodeVMExecution:
-		return "error while executing evm transaction"
-	case CodeInvalidNonce:
-		return "invalid nonce"
-	default:
-		return sdk.CodeToDefaultMsg(code)
-	}
-}
+//func CodeToDefaultMsg(code sdk.CodeType) string {
+//	switch code {
+//	case CodeInvalidValue:
+//		return "invalid value"
+//	case CodeInvalidChainID:
+//		return "invalid chain ID"
+//	case CodeInvalidSender:
+//		return "could not derive sender from transaction"
+//	case CodeVMExecution:
+//		return "error while executing evm transaction"
+//	case CodeInvalidNonce:
+//		return "invalid nonce"
+//	default:
+//		return sdk.CodeToDefaultMsg(code)
+//	}
+//}
+
+var (
+	ErrInvalidValue = sdk.Register(DefaultCodespace, CodeInvalidValue, "invalid value")
+	ErrInvalidChainID = sdk.Register(DefaultCodespace, CodeInvalidChainID, "invalid chainid")
+	ErrInvalidSender = sdk.Register(DefaultCodespace, CodeInvalidSender, "invalid sender")
+	ErrVMExecution = sdk.Register(DefaultCodespace, CodeVMExecution, "vme execution failed")
+	ErrInvalidNonce = sdk.Register(DefaultCodespace, CodeInvalidNonce, "invalid nonce")
+	ErrInternalError = sdk.Register(DefaultCodespace, CodeInternalError, "internal errot")
+)
 
 // ErrInvalidValue returns a standardized SDK error resulting from an invalid value.
-func ErrInvalidValue(msg string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidValue, msg)
+func WrapErrInvalidValue(msg string) error {
+	return sdk.Wrap(ErrInvalidValue, msg)
 }
 
 // ErrInvalidChainID returns a standardized SDK error resulting from an invalid chain ID.
-func ErrInvalidChainID(msg string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidChainID, msg)
+func WrapErrInvalidChainID(msg string) error {
+	return sdk.Wrap(ErrInvalidChainID, msg)
 }
 
 // ErrInvalidSender returns a standardized SDK error resulting from an invalid transaction sender.
-func ErrInvalidSender(msg string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidSender, msg)
+func WrapErrInvalidSender(msg string) error {
+	return sdk.Wrap(ErrInvalidSender, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrVMExecution(msg string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeVMExecution, msg)
+func WrapErrVMExecution(msg string) error {
+	return sdk.Wrap(ErrVMExecution, msg)
 }
 
 // ErrVMExecution returns a standardized SDK error resulting from an error in EVM execution.
-func ErrInvalidNonce(msg string) sdk.Error {
-	return sdk.NewError(DefaultCodespace, CodeInvalidNonce, msg)
+func WrapErrInvalidNonce(msg string) error {
+	return sdk.Wrap(ErrInvalidNonce, msg)
+}
+
+func WrapErrInternalError(msg string) error {
+	return sdk.Wrap(ErrInternalError, msg)
 }

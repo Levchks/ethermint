@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authutils "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	emint "github.com/cosmos/ethermint/types"
 	"github.com/cosmos/ethermint/x/evm/types"
@@ -16,7 +17,7 @@ import (
 
 // NewHandler returns a handler for Ethermint type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		switch msg := msg.(type) {
 		case types.EthereumTxMsg:
 			return handleETHTxMsg(ctx, keeper, msg)
@@ -24,34 +25,34 @@ func NewHandler(keeper Keeper) sdk.Handler {
 			return handleEmintMsg(ctx, keeper, *msg)
 		default:
 			errMsg := fmt.Sprintf("Unrecognized ethermint Msg type: %v", msg.Type())
-			return sdk.ErrUnknownRequest(errMsg).Result()
+			return &sdk.Result{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
 		}
 	}
 }
 
 // Handle an Ethereum specific tx
-func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) sdk.Result {
+func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) (*sdk.Result, error) {
 	if err := msg.ValidateBasic(); err != nil {
-		return err.Result()
+		return &sdk.Result{}, err
 	}
 
 	// parse the chainID from a string to a base-10 integer
 	intChainID, ok := new(big.Int).SetString(ctx.ChainID(), 10)
 	if !ok {
-		return emint.ErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID())).Result()
+		return &sdk.Result{}, emint.WrapErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
 	}
 
 	// Verify signature and retrieve sender address
 	sender, err := msg.VerifySig(intChainID)
 	if err != nil {
-		return emint.ErrInvalidSender(err.Error()).Result()
+		return &sdk.Result{}, emint.WrapErrInvalidSender(err.Error())
 	}
 
 	// Encode transaction by default Tx encoder
 	txEncoder := authutils.GetTxEncoder(types.ModuleCdc)
 	txBytes, err := txEncoder(msg)
 	if err != nil {
-		return sdk.ErrInternal(err.Error()).Result()
+		return &sdk.Result{}, emint.WrapErrInternalError(err.Error())
 	}
 	txHash := tm.Tx(txBytes).Hash()
 	ethHash := common.BytesToHash(txHash)
@@ -73,22 +74,23 @@ func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) sdk
 	keeper.csdb.Prepare(ethHash, common.Hash{}, keeper.txCount.get())
 	keeper.txCount.increment()
 
-	bloom, res := st.TransitionCSDB(ctx)
-	if res.IsOK() {
-		keeper.bloom.Or(keeper.bloom, bloom)
+	bloom, res, err := st.TransitionCSDB(ctx)
+	if err != nil {
+		return &res, err
 	}
-	return res
+	keeper.bloom.Or(keeper.bloom, bloom)
+	return &res, nil
 }
 
-func handleEmintMsg(ctx sdk.Context, keeper Keeper, msg types.EmintMsg) sdk.Result {
+func handleEmintMsg(ctx sdk.Context, keeper Keeper, msg types.EmintMsg) (*sdk.Result, error) {
 	if err := msg.ValidateBasic(); err != nil {
-		return err.Result()
+		return &sdk.Result{}, err
 	}
 
 	// parse the chainID from a string to a base-10 integer
 	intChainID, ok := new(big.Int).SetString(ctx.ChainID(), 10)
 	if !ok {
-		return emint.ErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID())).Result()
+		return &sdk.Result{}, emint.WrapErrInvalidChainID(fmt.Sprintf("invalid chainID: %s", ctx.ChainID()))
 	}
 
 	st := types.StateTransition{
@@ -112,6 +114,6 @@ func handleEmintMsg(ctx sdk.Context, keeper Keeper, msg types.EmintMsg) sdk.Resu
 	keeper.csdb.Prepare(common.Hash{}, common.Hash{}, keeper.txCount.get()) // Cannot provide tx hash
 	keeper.txCount.increment()
 
-	_, res := st.TransitionCSDB(ctx)
-	return res
+	_, res, err := st.TransitionCSDB(ctx)
+	return &res, err
 }

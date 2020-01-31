@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"github.com/cosmos/cosmos-sdk/types"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -56,7 +57,7 @@ func getKeybase(dryrun bool, buf io.Reader) (keys.Keybase, error) {
 		return keys.NewInMemory(keys.WithKeygenFunc(ethermintKeygenFunc)), nil
 	}
 
-	return clientkeys.NewKeyringFromHomeFlag(buf, keys.WithKeygenFunc(ethermintKeygenFunc))
+	return keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, buf, keys.WithKeygenFunc(ethermintKeygenFunc))
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
@@ -69,6 +70,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	return clientkeys.RunAddCmd(cmd, args, kb, inBuf)
 }
 
-func ethermintKeygenFunc(bz [32]byte) tmcrypto.PrivKey {
-	return emintCrypto.PrivKeySecp256k1(bz[:])
+//TODO check it
+func ethermintKeygenFunc(bz []byte, algo keys.SigningAlgo) (tmcrypto.PrivKey, error) {
+	return emintCrypto.PrivKeySecp256k1(bz[:]), nil
 }
