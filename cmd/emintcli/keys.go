@@ -41,7 +41,7 @@ func keyCommands() *cobra.Command {
 		clientkeys.ExportKeyCommand(),
 		clientkeys.ImportKeyCommand(),
 		clientkeys.ListKeysCmd(),
-		clientkeys.ShowKeysCmd(),
+		ShowKeysCmd(),
 		flags.LineBreak,
 		clientkeys.DeleteKeyCommand(),
 		clientkeys.UpdateKeyCommand(),
