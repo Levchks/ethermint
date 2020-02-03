@@ -2,8 +2,10 @@ package main
 
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"github.com/99designs/keyring"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,8 +64,11 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	fmt.Println("SHOW SERVICE NAME: ", sdk.KeyringServiceName())
 	fmt.Println("SHOW BACKEND: ", viper.GetString(flags.FlagKeyringBackend))
 	fmt.Println("SHOW HOME: ", flags.FlagHome)
+for  _, b := range keyring.AvailableBackends() {
+	fmt.Println("AVAILABLE: ", b)
+}
 
-	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+	kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), bufio.NewReader(cmd.InOrStdin()))
 	if err != nil {
 		return err
 	}
