@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/types"
 	"io"
 
@@ -53,6 +54,10 @@ func keyCommands() *cobra.Command {
 }
 
 func getKeybase(dryrun bool, buf io.Reader) (keys.Keybase, error) {
+	fmt.Println("DRY RUN: ", dryrun)
+	fmt.Println("SERVICE NAME: ", types.KeyringServiceName())
+	fmt.Println("BACKEND: ", viper.GetString(flags.FlagKeyringBackend))
+	fmt.Println("HOME: ", flags.FlagHome)
 	if dryrun {
 		return keys.NewInMemory(keys.WithKeygenFunc(ethermintKeygenFunc)), nil
 	}
@@ -62,11 +67,12 @@ func getKeybase(dryrun bool, buf io.Reader) (keys.Keybase, error) {
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
+	fmt.Println("***** run add command ******")
 	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("**************")
 	return clientkeys.RunAddCmd(cmd, args, kb, inBuf)
 }
 
