@@ -101,7 +101,7 @@ func registerRoutes(rs *lcd.RestServer) {
 }
 
 func unlockKeyFromNameAndPassphrase(accountName, passphrase string) (emintKey emintcrypto.PrivKeySecp256k1, err error) {
-	keybase, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, os.Stdin)
+	keybase, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), os.Stdin)
 	if err != nil {
 		return
 	}
