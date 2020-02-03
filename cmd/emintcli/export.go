@@ -32,7 +32,7 @@ func exportEthKeyCommand() *cobra.Command {
 func runExportCmd(cmd *cobra.Command, args []string) error {
 	kb, err := keys.NewKeyring(types.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
 	if err != nil {
-		return err
+		return fmt.Errorf("new keyring failed: %w", err)
 	}
 
 	buf := bufio.NewReader(cmd.InOrStdin())

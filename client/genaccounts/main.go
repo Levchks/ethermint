@@ -52,7 +52,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				// attempt to lookup address from Keybase if no address was provided
 				kb, err := keys.NewKeyring(sdk.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend),viper.GetString(flagClientHome), inBuf)
 				if err != nil {
-					return err
+					return fmt.Errorf("new keyring failed: %w", err)
 				}
 
 				info, err := kb.Get(args[0])

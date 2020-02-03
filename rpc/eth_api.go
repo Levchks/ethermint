@@ -110,7 +110,7 @@ func (e *PublicEthAPI) Accounts() ([]common.Address, error) {
 	addresses := make([]common.Address, 0) // return [] instead of nil if empty
 	keybase, err := keys2.NewKeyring(sdk.DefaultKeyringServiceName,viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), e.cliCtx.Input)
 	if err != nil {
-		return addresses, err
+		return addresses, fmt.Errorf("new keyring failed: %w", err)
 	}
 
 	infos, err := keybase.List()

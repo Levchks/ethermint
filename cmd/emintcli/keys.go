@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/types"
 	"io"
 
@@ -64,7 +65,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	kb, err := getKeybase(viper.GetBool(flagDryRun), inBuf)
 	if err != nil {
-		return err
+		return fmt.Errorf("new keyring failed: %w", err)
 	}
 
 	return clientkeys.RunAddCmd(cmd, args, kb, inBuf)
