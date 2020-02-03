@@ -77,8 +77,10 @@ for  _, b := range keyring.AvailableBackends() {
 		fmt.Println("ARGS TO SHOW: ", args[0])
 		info, err = kb.Get(args[0])
 		if err != nil {
+			fmt.Println(err.Error())
 			return err
 		}
+		fmt.Println("INFO: ", info.GetAddress())
 	} else {
 		pks := make([]tmcrypto.PubKey, len(args))
 		for i, keyName := range args {
