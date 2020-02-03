@@ -3,6 +3,7 @@ module github.com/cosmos/ethermint
 go 1.12
 
 require (
+	github.com/99designs/keyring v1.1.3
 	github.com/allegro/bigcache v1.2.1 // indirect
 	github.com/aristanetworks/goarista v0.0.0-20181101003910-5bb443fba8e0 // indirect
 	github.com/btcsuite/btcd v0.0.0-20190629003639-c26ffa870fd8 // indirect

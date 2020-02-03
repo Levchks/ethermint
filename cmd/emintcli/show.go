@@ -74,6 +74,7 @@ for  _, b := range keyring.AvailableBackends() {
 	}
 
 	if len(args) == 1 {
+		fmt.Println("ARGS TO SHOW: ", args[0])
 		info, err = kb.Get(args[0])
 		if err != nil {
 			return err
