@@ -57,7 +57,7 @@ func getKeybase(dryrun bool, buf io.Reader) (keys.Keybase, error) {
 		return keys.NewInMemory(keys.WithKeygenFunc(ethermintKeygenFunc)), nil
 	}
 
-	return keys.NewKeyring(types.KeyringServiceName(),viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, buf, keys.WithKeygenFunc(ethermintKeygenFunc))
+	return keys.NewKeyring(types.KeyringServiceName(),viper.GetString(flags.FlagKeyringBackend), flags.FlagHome, buf)
 }
 
 func runAddCmd(cmd *cobra.Command, args []string) error {
