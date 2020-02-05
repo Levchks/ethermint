@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/pkg/errors"
 	"log"
 	"math/big"
 	"strconv"
@@ -313,6 +314,17 @@ func (e *PublicEthAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, erro
 	if err := rlp.DecodeBytes(data, tx); err != nil {
 		// Return nil is for when gasLimit overflows uint64
 		return common.Hash{}, nil
+	}
+	// ChainID must be set as flag to send transaction
+	chainID := viper.GetString(flags.FlagChainID)
+	txChainID := tx.ChainID()
+	if txChainID.String() != chainID {
+		return common.Hash{}, fmt.Errorf(
+			fmt.Sprintf("wrong tx chainID: %s, node chainID: %s", txChainID.String(), chainID))
+	}
+	err := tx.ValidateBasic()
+	if err != nil {
+		return common.Hash{}, errors.Wrap(err, "basic validation failed")
 	}
 
 	// Encode transaction by default Tx encoder
