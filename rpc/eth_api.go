@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"log"
@@ -323,6 +324,12 @@ func (e *PublicEthAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, erro
 
 	// Encode transaction by default Tx encoder
 	txEncoder := authutils.GetTxEncoder(e.cliCtx.Codec)
+
+	////////////////////
+	txLog, _ := json.Marshal(tx)
+	fmt.Println("******** TX LOG: ", string(txLog))
+	///////////////////
+
 	txBytes, err := txEncoder(tx)
 	if err != nil {
 		return common.Hash{}, err
