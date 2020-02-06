@@ -55,10 +55,10 @@ emintcli keys add mykey
 Then, run these commands to start up a node
 ```bash
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
-emintd init mymoniker --chain-id 8
+emintd init mymoniker --chain-id 1
 
 # Set up config for CLI
-emintcli config chain-id 8
+emintcli config chain-id 1
 emintcli config output json
 emintcli config indent true
 emintcli config trust-node true

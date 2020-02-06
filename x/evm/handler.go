@@ -56,6 +56,7 @@ func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) (*s
 	}
 	txHash := tm.Tx(txBytes).Hash()
 	ethHash := common.BytesToHash(txHash)
+	fmt.Println("HANDLER ethHash: ", ethHash.String())
 
 	st := types.StateTransition{
 		Sender:       sender,
