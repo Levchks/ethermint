@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/prometheus/common/log"
+	"github.com/tendermint/crypto/sha3"
 	"io"
 	"math/big"
 	"sync/atomic"
@@ -211,9 +213,18 @@ func (msg *EthereumTxMsg) Hash() ethcmn.Hash {
 	//}
 
 	v := rlpHash(msg)
-	msg.hash.Store(v)
+	log.Info("rlp hash: ", v.String())
+	//msg.hash.Store(v)
 
-	return v
+	return mHash()
+}
+
+func mHash() (hash ethcmn.Hash){
+	hasher := sha3.NewLegacyKeccak256()
+	//nolint:gosec,errcheck
+	w := []byte(`test_hash`)
+	hasher.Sum(w)
+	return hash
 }
 
 // Sign calculates a secp256k1 ECDSA signature and signs the transaction. It
