@@ -206,9 +206,9 @@ func (msg *EthereumTxMsg) DecodeRLP(s *rlp.Stream) error {
 
 // Hash hashes the RLP encoding of a transaction.
 func (msg *EthereumTxMsg) Hash() ethcmn.Hash {
-	if hash := msg.hash.Load(); hash != nil {
-		return hash.(ethcmn.Hash)
-	}
+	//if hash := msg.hash.Load(); hash != nil {
+	//	return hash.(ethcmn.Hash)
+	//}
 
 	v := rlpHash(msg)
 	msg.hash.Store(v)
@@ -220,7 +220,8 @@ func (msg *EthereumTxMsg) Hash() ethcmn.Hash {
 // takes a private key and chainID to sign an Ethereum transaction according to
 // EIP155 standard. It mutates the transaction as it populates the V, R, S
 // fields of the Transaction's Signature.
-func (msg *EthereumTxMsg) Sign(chainID *big.Int, priv *ecdsa.PrivateKey) {
+//SignT used only for tests
+func (msg *EthereumTxMsg) SignT(chainID *big.Int, priv *ecdsa.PrivateKey) {
 	txHash := msg.RLPSignBytes(chainID)
 
 	sig, err := ethcrypto.Sign(txHash[:], priv)

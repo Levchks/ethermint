@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	keys2 "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/pkg/errors"
 	"log"
 	"math/big"
 	"strconv"
@@ -22,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -240,71 +238,71 @@ func (e *PublicEthAPI) GetCode(address common.Address, blockNumber BlockNumber) 
 }
 
 // Sign signs the provided data using the private key of address via Geth's signature standard.
-func (e *PublicEthAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
-	// TODO: Change this functionality to find an unlocked account by address
-	if e.key == nil || !bytes.Equal(e.key.PubKey().Address().Bytes(), address.Bytes()) {
-		return nil, keystore.ErrLocked
-	}
-
-	// Sign the requested hash with the wallet
-	signature, err := e.key.Sign(data)
-	if err == nil {
-		signature[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
-	}
-
-	return signature, err
-}
+//func (e *PublicEthAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
+//	// TODO: Change this functionality to find an unlocked account by address
+//	if e.key == nil || !bytes.Equal(e.key.PubKey().Address().Bytes(), address.Bytes()) {
+//		return nil, keystore.ErrLocked
+//	}
+//
+//	// Sign the requested hash with the wallet
+//	signature, err := e.key.Sign(data)
+//	if err == nil {
+//		signature[64] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
+//	}
+//
+//	return signature, err
+//}
 
 // SendTransaction sends an Ethereum transaction.
-func (e *PublicEthAPI) SendTransaction(args params.SendTxArgs) (common.Hash, error) {
-	// TODO: Change this functionality to find an unlocked account by address
-	if e.key == nil || !bytes.Equal(e.key.PubKey().Address().Bytes(), args.From.Bytes()) {
-		return common.Hash{}, keystore.ErrLocked
-	}
-
-	// Mutex lock the address' nonce to avoid assigning it to multiple requests
-	if args.Nonce == nil {
-		e.nonceLock.LockAddr(args.From)
-		defer e.nonceLock.UnlockAddr(args.From)
-	}
-
-	// Assemble transaction from fields
-	tx, err := e.generateFromArgs(args)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	// ChainID must be set as flag to send transaction
-	chainID := viper.GetString(flags.FlagChainID)
-	// parse the chainID from a string to a base-10 integer
-	intChainID, ok := new(big.Int).SetString(chainID, 10)
-	if !ok {
-		return common.Hash{}, fmt.Errorf(
-			fmt.Sprintf("invalid chainID: %s, must be integer format", chainID))
-	}
-
-	// Sign transaction
-	tx.Sign(intChainID, e.key.ToECDSA())
-
-	// Encode transaction by default Tx encoder
-	txEncoder := authutils.GetTxEncoder(e.cliCtx.Codec)
-	txBytes, err := txEncoder(tx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	// Broadcast transaction
-	res, err := e.cliCtx.BroadcastTx(txBytes)
-	// If error is encountered on the node, the broadcast will not return an error
-	// TODO: Remove res log
-	fmt.Println(res.RawLog)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	// Return transaction hash
-	return common.HexToHash(res.TxHash), nil
-}
+//func (e *PublicEthAPI) SendTransaction(args params.SendTxArgs) (common.Hash, error) {
+//	// TODO: Change this functionality to find an unlocked account by address
+//	if e.key == nil || !bytes.Equal(e.key.PubKey().Address().Bytes(), args.From.Bytes()) {
+//		return common.Hash{}, keystore.ErrLocked
+//	}
+//
+//	// Mutex lock the address' nonce to avoid assigning it to multiple requests
+//	if args.Nonce == nil {
+//		e.nonceLock.LockAddr(args.From)
+//		defer e.nonceLock.UnlockAddr(args.From)
+//	}
+//
+//	// Assemble transaction from fields
+//	tx, err := e.generateFromArgs(args)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	// ChainID must be set as flag to send transaction
+//	chainID := viper.GetString(flags.FlagChainID)
+//	// parse the chainID from a string to a base-10 integer
+//	intChainID, ok := new(big.Int).SetString(chainID, 10)
+//	if !ok {
+//		return common.Hash{}, fmt.Errorf(
+//			fmt.Sprintf("invalid chainID: %s, must be integer format", chainID))
+//	}
+//
+//	// Sign transaction
+//	tx.Sign(intChainID, e.key.ToECDSA())
+//
+//	// Encode transaction by default Tx encoder
+//	txEncoder := authutils.GetTxEncoder(e.cliCtx.Codec)
+//	txBytes, err := txEncoder(tx)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	// Broadcast transaction
+//	res, err := e.cliCtx.BroadcastTx(txBytes)
+//	// If error is encountered on the node, the broadcast will not return an error
+//	// TODO: Remove res log
+//	fmt.Println(res.RawLog)
+//	if err != nil {
+//		return common.Hash{}, err
+//	}
+//
+//	// Return transaction hash
+//	return common.HexToHash(res.TxHash), nil
+//}
 
 // SendRawTransaction send a raw Ethereum transaction.
 func (e *PublicEthAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, error) {
@@ -321,10 +319,6 @@ func (e *PublicEthAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, erro
 	if txChainID.String() != chainID {
 		return common.Hash{}, fmt.Errorf(
 			fmt.Sprintf("wrong tx chainID: %s, node chainID: %s", txChainID.String(), chainID))
-	}
-	err := tx.ValidateBasic()
-	if err != nil {
-		return common.Hash{}, errors.Wrap(err, "basic validation failed")
 	}
 
 	// Encode transaction by default Tx encoder
@@ -344,6 +338,8 @@ func (e *PublicEthAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, erro
 	}
 
 	// Return transaction hash
+	fmt.Println("res.TxHash as string: ", res.TxHash)
+	fmt.Println("res.TxHash as common.Hash: ", common.HexToHash(res.TxHash).String())
 	return common.HexToHash(res.TxHash), nil
 }
 

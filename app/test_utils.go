@@ -133,6 +133,6 @@ func newTestEthTx(ctx sdk.Context, msg *evmtypes.EthereumTxMsg, priv tmcrypto.Pr
 		panic(fmt.Sprintf("invalid private key type: %T", priv))
 	}
 
-	msg.Sign(chainID, privkey.ToECDSA())
+	msg.SignT(chainID, privkey.ToECDSA())
 	return msg
 }
