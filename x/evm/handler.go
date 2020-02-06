@@ -1,6 +1,7 @@
 package evm
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -71,6 +72,10 @@ func handleETHTxMsg(ctx sdk.Context, keeper Keeper, msg types.EthereumTxMsg) (*s
 		THash:        &ethHash,
 		Simulate:     ctx.IsCheckTx(),
 	}
+
+	stTest, _ := json.Marshal(&st)
+	fmt.Println("**** State Transaction: ", string(stTest))
+
 	// Prepare db for logs
 	keeper.csdb.Prepare(ethHash, common.Hash{}, keeper.txCount.get())
 	keeper.txCount.increment()
