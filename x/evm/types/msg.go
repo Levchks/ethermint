@@ -4,8 +4,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"github.com/prometheus/common/log"
-	"github.com/tendermint/crypto/sha3"
 	"io"
 	"math/big"
 	"sync/atomic"
@@ -208,25 +206,15 @@ func (msg *EthereumTxMsg) DecodeRLP(s *rlp.Stream) error {
 
 // Hash hashes the RLP encoding of a transaction.
 func (msg *EthereumTxMsg) Hash() ethcmn.Hash {
-	//if hash := msg.hash.Load(); hash != nil {
-	//	return hash.(ethcmn.Hash)
-	//}
+	if hash := msg.hash.Load(); hash != nil {
+		return hash.(ethcmn.Hash)
+	}
 
 	v := rlpHash(msg)
-	log.Info("rlp hash: ", v.String())
-	//msg.hash.Store(v)
+	msg.hash.Store(v)
 
-	return mHash()
+	return v
 }
-
-func mHash() (hash ethcmn.Hash){
-	hasher := sha3.NewLegacyKeccak256()
-	//nolint:gosec,errcheck
-	w := []byte(`test_hash`)
-	hasher.Sum(w)
-	return hash
-}
-
 // Sign calculates a secp256k1 ECDSA signature and signs the transaction. It
 // takes a private key and chainID to sign an Ethereum transaction according to
 // EIP155 standard. It mutates the transaction as it populates the V, R, S
